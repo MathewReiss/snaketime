@@ -56,6 +56,13 @@ typedef struct {
 
 static Window *window;
 
+typedef struct {
+	char hour[3];
+	char min[3];
+} DisplayTime;
+
+DisplayTime dtime;
+
 Snake snake;
 Position fruit;
 Position old_position;
@@ -112,8 +119,13 @@ void draw_snake(GContext *ctx) {
 // Draw the time in the last squares of the snake.
 void draw_time(GContext *ctx, struct tm *tick_time){
 	graphics_context_set_text_color(ctx, GColorOxfordBlue);
-	graphics_draw_text(ctx, "12", fonts_get_system_font(FONT_KEY_GOTHIC_09), (GRect){ .origin = get_point_from_position(&snake.body[snake.length-2]), .size = { .w = CELL_WIDTH, .h = CELL_WIDTH } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
-	graphics_draw_text(ctx, "12", fonts_get_system_font(FONT_KEY_GOTHIC_09), (GRect){ .origin = get_point_from_position(&snake.body[snake.length-1]), .size = { .w = CELL_WIDTH, .h = CELL_WIDTH } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+	graphics_draw_text(ctx, dtime.hour, fonts_get_system_font(FONT_KEY_GOTHIC_09), (GRect){ .origin = get_point_from_position(&snake.body[snake.length-2]), .size = { .w = CELL_WIDTH, .h = CELL_WIDTH } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+	graphics_draw_text(ctx, dtime.min, fonts_get_system_font(FONT_KEY_GOTHIC_09), (GRect){ .origin = get_point_from_position(&snake.body[snake.length-1]), .size = { .w = CELL_WIDTH, .h = CELL_WIDTH } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+}
+
+void tick(struct tm *tick_time, TimeUnits unit){
+	snprintf(dtime.hour, sizeof(dtime.hour), "%d", (int)tick_time->tm_hour);
+	snprintf(dtime.min, sizeof(dtime.min), "%d", tick_time->tm_min);
 }
 
 // Draw a border around the screen.  Cross the border and die!
@@ -200,6 +212,8 @@ void init_snake() {
 
   old_position.x = 0;
   old_position.y = 0;
+	
+	tick_timer_service_subscribe(MINUTE_UNIT, tick);
 }
 
 // Reset snake and fruit...
